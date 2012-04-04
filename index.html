@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>ESV API</title>
+<style>body { font-family: "Helvetica", sans-serif; }</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+</head>
+<body>
+
+<div id="search">
+	<input type="search" id="searchField" value="Search ESV Bible...">
+	<button id="toggleVerse" href="#">Toggle Verse Numbers</button>
+</div>
+
+<div id="result"><p>Enter a bible reference above (eg, john 3:16-18)</p></div>
+
+<script>
+$(function(){
+	
+	// API Call
+	function get(passage) {
+		//$('#result').html('Loading...');
+		// API url to call
+		var url = 'http://www.esvapi.org/v2/rest/passageQuery?key=IP&passage='+passage+'&include-headings=false&include-footnotes=false&include-audio-link=false&include-short-copyright=false&output-format=plain-text';
+		// Make the Call
+		$.post('esv.php', { url: url }, function (data) { format(data); });
+	}
+	
+	// Format & Display Returned Data
+	function format(data) {
+		data = data.replace('=======================================================','').replace(/_______________________________________________________/g, '').split('[');
+		var copyright = '(<a href="http://www.esv.org/" target="_blank">ESV</a>)';
+		$('#result').html('<p><b class="ref">'+data[0]+'</b> '+copyright+'</p>');
+		$.each(data, function (i) {
+			if (i > 0) {
+				var verse = data[i].split(']');
+				$('#result').append('<p><sup><span class="num">'+verse[0]+'</span></sup><span class="verse">'+verse[1]+'</span></p>');
+			}
+		});
+	}
+	
+	// Search while Typing
+	$('#searchField').bind('input propertychange', function () {
+		var passage = $('#searchField').val().replace(' ','+');
+		if (passage!==''&&passage.length>1) {
+			get(passage);
+		}
+	});
+	
+	// Input Focus & Blur Actions
+	$('#searchField').bind('focus', function () {
+		$(this).val('');
+	});
+	$('#searchField').bind('blur', function () {
+		if ($(this).val()=='') {
+			$(this).val('Search ESV Bible...');
+		}
+	});
+	
+	// Toggle Verse Numbers
+	$('#toggleVerse').bind('click', function (e) {
+		e.preventDefault();
+		$('.num').toggle();
+	});
+	
+});
+</script>
+</body>
+</html>
